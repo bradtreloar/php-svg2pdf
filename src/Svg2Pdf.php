@@ -22,21 +22,9 @@ class Svg2Pdf {
     }
     $pdf = new \TCPDF($orientation, 'mm', $box);
     if ($this->spotColors) {
-      foreach ($this->spotColors as $id => $color) {
-        \TCPDF_COLORS::$spotcolor[$id] = [
-          $color['cyan'],
-          $color['magenta'],
-          $color['yellow'],
-          $color['black'],
-          $color['name'],
-        ];
-        $pdf->AddSpotColor(
-          $color['name'],
-          $color['cyan'],
-          $color['magenta'],
-          $color['yellow'],
-          $color['black']
-        );
+      foreach ($this->spotColors as $spotColor) {
+        $spotColor->register();
+        $spotColor->addToPdf($pdf);
       }
     }
     $pdf->SetCreator($creator);
@@ -53,14 +41,11 @@ class Svg2Pdf {
     $pdf->Output($pdf_filepath, 'F');
   }
 
-  public function addSpotColor(string $id, int $cyan, int $magenta, int $yellow, int $black, string $name): void {
-    $this->spotColors[$id] = [
-      'cyan' => $cyan,
-      'magenta' => $magenta,
-      'yellow' => $yellow,
-      'black' => $black,
-      'name' => $name,
-    ];
+  public function addSpotColor(string $id, int $cyan, int $magenta, int $yellow, int $black, string $name = ''): void {
+    if (!$name) {
+      $name = $id;
+    }
+    $this->spotColors[] = new SpotColor($id, $name, $cyan, $magenta, $yellow, $black);
   }
 
   protected function millimetres(string $value): string {
