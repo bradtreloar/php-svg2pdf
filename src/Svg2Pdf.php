@@ -17,6 +17,8 @@ class Svg2Pdf {
    *   The path to the SVG file.
    * @param $pdf_filepath string
    *   The path that the PDF file will be saved to.
+   * @param $margin float
+   *   The space to add around the SVG, in millimetres.
    * @param $title string
    *   The PDF title.
    * @param $creator string
@@ -26,15 +28,20 @@ class Svg2Pdf {
    */
   public function convert(string $svg_filepath, 
                           string $pdf_filepath, 
+                          float $margin = 1,
                           string $title = "Converted SVG", 
                           string $creator = "bradtreloar/svg2pdf",
                           string $author = "bradtreloar/svg2pdf"): void {
-    $box = $this->getBox($svg_filepath);
+    $svgBox = $this->getBox($svg_filepath);
+    
     $orientation = 'Portrait';
-    if (floatval($box[0]) > floatval($box[1])) {
+    if (floatval($svgBox[0]) > floatval($svgBox[1])) {
       $orientation = 'Landscape';
     }
-    $pdf = new \TCPDF($orientation, 'mm', $box);
+    $pdf = new \TCPDF($orientation, 'mm', [
+      $svgBox[0] + ($margin * 2),
+      $svgBox[1] + ($margin * 2),
+    ]);
     if ($this->spotColors) {
       foreach ($this->spotColors as $spotColor) {
         $spotColor->register();
@@ -50,7 +57,9 @@ class Svg2Pdf {
     $pdf->AddPage();
     // Remove bottom margin.
     $pdf->SetAutoPageBreak(TRUE, 0);
-    $pdf->ImageSVG($svg_filepath, $x=0, $y=0, $w=$box[0], $h=$box[1], $link='', $align='', $palign='', $border=0, $fitonpage=false);
+    $pdf->ImageSVG($svg_filepath, 
+      $x=$margin, $y=$margin, $w=$svgBox[0], $h=$svgBox[1], 
+      $link='', $align='', $palign='', $border=0, $fitonpage=false);
     $pdf->Output($pdf_filepath, 'F');
   }
 
